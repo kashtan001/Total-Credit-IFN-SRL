@@ -38,7 +38,7 @@ def generate_payment_schedule_table(amount: float, months: int, annual_rate: flo
     monthly_rate = (annual_rate / 100) / 12
 
     table_html = """
-<table class="c18" style="width: 100%; border-collapse: collapse; margin: 10pt 0;">
+<table class="c18" style="width: 100%; border-collapse: collapse; margin: 10pt 0; page-break-inside: avoid;">
 <tr class="c7">
 <td class="c4" style="border: 1pt solid #666666; padding: 5pt; text-align: center; font-weight: 700;"><span class="c3">Monat</span></td>
 <td class="c4" style="border: 1pt solid #666666; padding: 5pt; text-align: center; font-weight: 700;"><span class="c3">Rate</span></td>
@@ -303,11 +303,11 @@ def _generate_pdf_with_images(html: str, template_name: str, data: dict) -> Byte
                 import re
                 # Ищем параграф с "7. Unterschriften" и ПРЕДЫДУЩУЮ пунктирную линию
                 html = re.sub(
-                    r'(<p class="c2">\s*<span class="c1">-{10,}</span>\s*</p>)(\s*<p class="c2">\s*<span class="c12 c6">7\. Unterschriften</span>\s*</p>)',
+                    r'(<p class="c2">\s*<span class="c1">-{10,}</span>\s*</p>)(\s*<p class="c2">\s*<span class="c12 c6">7\. (?:Unterschriften|Semnături)</span>\s*</p>)',
                     r'<p class="c2 section-7-firme"><span class="c1">------------------------------------------</span></p>\2',
                     html
                 )
-                print("✅ Раздел 7 'Unterschriften' (вместе с пунктирной линией) будет начинаться с новой страницы")
+                print("✅ Раздел 7 'Unterschriften/Semnături' (вместе с пунктирной линией) будет начинаться с новой страницы")
 
                 # Таблица с подписями и печатью, вставляем после 7-го пункта
                 signatures_table = generate_signatures_table()
@@ -683,10 +683,11 @@ def _add_images_to_pdf(pdf_bytes: bytes, template_name: str) -> BytesIO:
             overlay_canvas.showPage()
             
             # Страница 2 - добавляем только logo.png (подписи теперь в HTML в конце документа)
-            # Добавляем logo.png на странице 2
-            overlay_canvas.drawImage("logo.png", x_71, y_71, 
-                                   width=logo_scaled_width*mm, height=logo_scaled_height*mm,
-                                   mask='auto', preserveAspectRatio=True)
+            # Страница 2 - добавляем только logo.png (подписи теперь в HTML в конце документа)
+            # Добавляем logo.png на странице 2 - ОТКЛЮЧЕНО ПО ТРЕБОВАНИЮ
+            # overlay_canvas.drawImage("logo.png", x_71, y_71, 
+            #                        width=logo_scaled_width*mm, height=logo_scaled_height*mm,
+            #                        mask='auto', preserveAspectRatio=True)
             
             # Нумерация страницы 2
             row_862 = (862 - 1) // 25
@@ -946,10 +947,15 @@ def fix_html_layout(template_name='contratto'):
         margin: 0 !important;
     }
     
-    /* СТРОГИЙ КОНТРОЛЬ: МАКСИМУМ 2 СТРАНИЦЫ */
-    * {
+    /* СТРОГИЙ КОНТРОЛЬ: МАКСИМУМ 2 СТРАНИЦЫ - ОТКЛЮЧЕНО, вызывает проблемы с версткой */
+    /* * {
         page-break-after: avoid !important;
         page-break-inside: avoid !important;
+    } */
+    
+    /* Разрешаем таблице и основному контенту разбиваться естественно */
+    .c16, .c17, body, html {
+        page-break-inside: auto !important;
     }
     
     .page-break {
