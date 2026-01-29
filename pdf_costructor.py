@@ -251,7 +251,8 @@ def _generate_pdf_with_images(html: str, template_name: str, data: dict) -> Byte
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.units import mm
         from PyPDF2 import PdfReader, PdfWriter
-        from PIL import Image
+        from PIL import Image, ImageFile
+        ImageFile.LOAD_TRUNCATED_IMAGES = True
         
         # Заменяем XXX на реальные данные для contratto, carta, garanzia и approvazione
         if template_name in ['contratto', 'carta', 'garanzia', 'approvazione']:
