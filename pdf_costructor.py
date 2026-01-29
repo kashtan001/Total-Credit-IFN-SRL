@@ -112,7 +112,7 @@ def generate_signatures_table() -> str:
     seal_2_data = image_to_base64('seal_2.png')
 
     if not all([sing_1_data, sing_2_data, seal_data, seal_2_data]):
-        print("⚠️  Не все изображения найдены для таблицы подписей/печати (sing_1.png, sing_2.png, seal_1.png, seal_2.png)")
+        print("Warning: Not all images found for signatures table (sing_1.png, sing_2.png, seal_1.png, seal_2.png)")
         return ''
 
     # В vertrag.html таблица: Col 1 (Bank DZ), Col 2 (Vermittler MKB), Col 3 (Kunde)
@@ -284,7 +284,7 @@ def _generate_pdf_with_images(html: str, template_name: str, data: dict) -> Byte
 
                 # Проверяем наличие плейсхолдера перед генерацией таблицы
                 placeholder_found = '<!-- PAYMENT_SCHEDULE_TABLE_PLACEHOLDER -->' in html
-                print(f"🔍 Плейсхолдер таблицы платежей {'✅ найден' if placeholder_found else '❌ НЕ найден'} в HTML")
+                print(f"Checking payment schedule placeholder: {'FOUND' if placeholder_found else 'NOT FOUND'} in HTML")
                 
                 payment_schedule_table = generate_payment_schedule_table(
                     data['amount'],
@@ -295,24 +295,25 @@ def _generate_pdf_with_images(html: str, template_name: str, data: dict) -> Byte
                 
                 if placeholder_found:
                     html = html.replace('<!-- PAYMENT_SCHEDULE_TABLE_PLACEHOLDER -->', payment_schedule_table)
-                    print(f"📊 Таблица платежей вставлена (размер таблицы: {len(payment_schedule_table)} символов)")
+                    print(f"Payment schedule table inserted (size: {len(payment_schedule_table)} chars)")
                 else:
-                    print("⚠️  Плейсхолдер таблицы не найден - таблица НЕ будет вставлена!")
+                    print("Payment schedule placeholder not found - table will NOT be inserted!")
 
                 # Добавляем класс к разделу 7 для принудительного разрыва страницы
                 import re
                 # Ищем параграф с "7. Unterschriften" и ПРЕДЫДУЩУЮ пунктирную линию
+                # Relaxed regex to catch the structure even if classes change slightly
                 html = re.sub(
-                    r'(<p class="c2">\s*<span class="c1">-{10,}</span>\s*</p>)(\s*<p class="c2">\s*<span class="c12 c6">7\. (?:Unterschriften|Semnături)</span>\s*</p>)',
+                    r'(<p[^>]*>\s*<span[^>]*>-{10,}</span>\s*</p>)(\s*<p[^>]*>\s*<span[^>]*>7\. (?:Unterschriften|Semnături)</span>\s*</p>)',
                     r'<p class="c2 section-7-firme"><span class="c1">------------------------------------------</span></p>\2',
                     html
                 )
-                print("✅ Раздел 7 'Unterschriften/Semnături' (вместе с пунктирной линией) будет начинаться с новой страницы")
+                print("Code: Section 7 (Unterschriften/Semnaturi) break injected")
 
                 # Таблица с подписями и печатью, вставляем после 7-го пункта
                 signatures_table = generate_signatures_table()
                 html = html.replace('<!-- SIGNATURES_TABLE_PLACEHOLDER -->', signatures_table)
-                print("💉 Изображения подписей внедрены через signatures_table")
+                print("Signatures table injected via placeholder")
                 
                 for old, new in replacements:
                     html = html.replace(old, new, 1)  # заменяем по одному
@@ -363,7 +364,7 @@ def _generate_pdf_with_images(html: str, template_name: str, data: dict) -> Byte
         return _add_images_to_pdf(pdf_bytes, template_name)
             
     except Exception as e:
-        print(f"Ошибка генерации PDF: {e}")
+        print(f"PDF generation error: {e!r}")
         raise
 
 def _add_images_to_pdf(pdf_bytes: bytes, template_name: str) -> BytesIO:
@@ -463,7 +464,7 @@ def _add_images_to_pdf(pdf_bytes: bytes, template_name: str) -> BytesIO:
                                    mask='auto', preserveAspectRatio=True)
             
             overlay_canvas.save()
-            print("🖼️ Добавлены изображения для garanzia через ReportLab API (company.png, logo.png, seal_1.png, sing_1.png)")
+            print("Added images for garanzia via ReportLab API")
         
         elif template_name == 'carta':
             # Добавляем company.png как в contratto
@@ -545,7 +546,7 @@ def _add_images_to_pdf(pdf_bytes: bytes, template_name: str) -> BytesIO:
                                    mask='auto', preserveAspectRatio=True)
 
             overlay_canvas.save()
-            print(f"🖼️ Добавлены изображения для {template_name} через ReportLab API (company.png, logo.png, seal_1.png, sing_1.png)")
+            print(f"Added images for {template_name} via ReportLab API")
 
         elif template_name == 'approvazione':
             # Страница 1 - только company.png
@@ -630,7 +631,7 @@ def _add_images_to_pdf(pdf_bytes: bytes, template_name: str) -> BytesIO:
                                    mask='auto', preserveAspectRatio=True)
             
             overlay_canvas.save()
-            print(f"🖼️ Добавлены изображения для approvazione через ReportLab API (logo на странице 1, печать и подпись на странице 2)")
+            print(f"Added images for approvazione via ReportLab API")
         
         elif template_name == 'contratto':
             # Страница 1 - добавляем company.png и logo.png
@@ -701,7 +702,7 @@ def _add_images_to_pdf(pdf_bytes: bytes, template_name: str) -> BytesIO:
             overlay_canvas.drawString(x_page_num-2, y_page_num-2, "2")
             
             overlay_canvas.save()
-            print("🖼️ Добавлены изображения для contratto через ReportLab API (company.png + logo.png на 1-й странице, logo.png на 2-й странице)")
+            print("Added images for contratto via ReportLab API")
         
         # Объединяем PDF с overlay
         overlay_buffer.seek(0)
@@ -721,11 +722,11 @@ def _add_images_to_pdf(pdf_bytes: bytes, template_name: str) -> BytesIO:
         writer.write(final_buffer)
         final_buffer.seek(0)
         
-        print(f"✅ PDF с изображениями создан через API! Размер: {len(final_buffer.getvalue())} байт")
+        print(f"PDF with images created! Size: {len(final_buffer.getvalue())} bytes")
         return final_buffer
         
     except Exception as e:
-        print(f"❌ Ошибка наложения изображений через API: {e}")
+        print(f"Error merging images: {e}")
         # Возвращаем обычный PDF без изображений
         buf = BytesIO(pdf_bytes)
         buf.seek(0)
@@ -1244,7 +1245,7 @@ def fix_html_layout(template_name='contratto'):
         2. Элементы с красными/оранжевыми рамками
         3. Таблицы с фиксированными высотами строк
         """
-        print("🔍 Анализируем HTML на предмет проблемных элементов...")
+        print("Analyzing HTML for problematic elements...")
         
         # 1. НАХОДИМ И ИСПРАВЛЯЕМ ОГРОМНЫЕ ВЫСОТЫ (>500pt)
         height_pattern = r'\.([a-zA-Z0-9_-]+)\{[^}]*height:\s*([0-9]+(?:\.[0-9]+)?)pt[^}]*\}'
@@ -1260,7 +1261,7 @@ def fix_html_layout(template_name='contratto'):
                 fixed_heights.append(f"{class_name}({height_value}pt)")
         
         if fixed_heights:
-            print(f"📏 Исправлены огромные высоты: {', '.join(fixed_heights)}")
+            print(f"Fixed huge heights: {', '.join(fixed_heights)}")
         
         # 2. НАХОДИМ И УБИРАЕМ СТАРЫЕ РАМКИ #a52b4c и #5985db (встроенные из HTML, удаляем чтобы использовать @page рамку #008bff)
         # Это нужно чтобы избежать двойных рамок с @page
@@ -1299,7 +1300,7 @@ def fix_html_layout(template_name='contratto'):
             print(f"📋 Исправлены высоты строк таблиц: {', '.join(fixed_rows)}")
         
         if not fixed_heights and not removed_borders and not fixed_rows:
-            print("✅ Проблемных элементов не найдено")
+            print("No problematic elements found")
         
         return html_content
     
@@ -1316,12 +1317,12 @@ def fix_html_layout(template_name='contratto'):
     # html = re.sub(r'<table[^>]*>\s*<tbody[^>]*>\s*<tr[^>]*>\s*<td[^>]*>\s*</td>\s*</tr>\s*</tbody>\s*</table>', '', html)  # ОТКЛЮЧЕНО - тестируем
     
     if template_name != 'garanzia':
-        print("🗑️ Удалены: блок изображений между разделами")
-        print("📄 Установлен принудительный разрыв после раздела 'Agevolazioni'")
-        print("🤖 ПРИМЕНЕН: Универсальный анализатор проблемных элементов")
-        print("✅ Агрессивная очистка отключена - сохранены пробелы и структура")
+        print("Removed: image block between sections")
+        print("Forced page break after 'Agevolazioni'")
+        print("APPLIED: Universal element analyzer")
+        print("Aggressive cleaning disabled - spaces and structure preserved")
     else:
-        print("🚫 Для garanzia все модификации отключены - используется исходный HTML")
+        print("For garanzia all modifications disabled")
     
     # ГЕНЕРИРУЕМ СЕТКУ 25x35 ДЛЯ ПОЗИЦИОНИРОВАНИЯ
     def generate_grid():
@@ -1387,22 +1388,22 @@ def fix_html_layout(template_name='contratto'):
                 html = html.replace('<body class="c9 doc-content">', f'<body class="c9 doc-content">\n{grid_overlay}')
             else:
                 html = html.replace('<body class="c6 doc-content">', f'<body class="c6 doc-content">\n{grid_overlay}')
-        print("🔢 Добавлена сетка позиционирования 25x35")
-        print("📋 Изображения будут добавлены через ReportLab поверх PDF")
+        print("Added 25x35 positioning grid")
+        print("Images will be added via ReportLab overlay")
     elif template_name == 'garanzia':
-        print("🚫 Для garanzia НЕ добавляем сетку - сохраняем чистый HTML")
-        print("📋 Изображения будут добавлены ТОЛЬКО через ReportLab поверх PDF")
+        print("Grid disabled for garanzia")
+        print("Images added via ReportLab only")
     else:
-        print("📋 Простой PDF без сетки и изображений")
+        print("Simple PDF without grid")
     
     # НЕ СОХРАНЯЕМ исправленный HTML - не нужен
     
-    print(f"✅ HTML обработан в памяти (файл не сохраняется)")
-    print("🔧 Рамка зафиксирована через @page - будет на каждой странице!")
+    print(f"HTML processed in memory (file not saved)")
+    print("Frame fixed via @page - will be on every page!")
     if template_name != 'garanzia':
-        print("📄 Удалены изображения между разделами - главная причина лишних страниц")
+        print("Removed images between sections")
     else:
-        print("📄 Для garanzia сохранена исходная структура HTML без удаления изображений")
+        print("For garanzia original HTML structure preserved")
     
     # Тестовые данные удалены - используем только данные из API
     
@@ -1416,7 +1417,7 @@ def main():
     # Определяем какой шаблон обрабатывать
     template = sys.argv[1] if len(sys.argv) > 1 else 'contratto'
     
-    print(f"🧪 Тестируем PDF конструктор для {template} через API...")
+    print(f"Test: PDF constructor for {template} via API...")
     
     # Тестовые данные
     test_data = {
@@ -1453,7 +1454,9 @@ def main():
         print(f"📊 Данные: {test_data}")
         
     except Exception as e:
-        print(f"❌ Ошибка тестирования API: {e}")
+        import traceback
+        traceback.print_exc()
+        print(f"Error testing API: {e!r}")
 
 
 if __name__ == '__main__':
