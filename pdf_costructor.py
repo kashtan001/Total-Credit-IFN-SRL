@@ -760,7 +760,7 @@ def fix_html_layout(template_name='contratto'):
     @page {
         size: A4;
         margin: 1cm;           /* 1cm отступ от края страницы до текста */
-        border: 4pt solid #008bff;  /* Синяя рамка вокруг текста (увеличена на 1pt) */
+        border: 4pt solid #013f25;  /* Синяя рамка вокруг текста (увеличена на 1pt) */
         padding: 0;            /* Никаких дополнительных отступов */
     }
     
@@ -927,7 +927,7 @@ def fix_html_layout(template_name='contratto'):
     @page {
         size: A4;
         margin: 1cm;  /* Отступ как в garanzia */
-        border: 4pt solid #008bff;  /* Синяя рамка как в garanzia (4pt) */
+        border: 4pt solid #013f25;  /* Синяя рамка как в garanzia (4pt) */
         padding: 0;  /* Отступ как в garanzia */
     }
     
